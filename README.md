@@ -1,7 +1,7 @@
 # Wireguard Server für Lightning Node und Services in der Oracle Cloud (Free Tier)
 Tutorial zum Aufsetzen eines Wireguard VPN Servers auf einem kostenlosen Oracle Cloud VPS
 
-Diese Anleitung soll als Hilfestellung dienen, eine bestehende Raspiblitz Full Node, dessen Lightning-Implementierung und gewünschte Dienste über die VPN-Clearnet-Adresse freizugeben
+Diese Anleitung soll als Hilfestellung dienen, eine bestehende Raspiblitz Full Node, dessen Lightning-Implementierung und gewünschte Dienste über die VPN-Clearnet-Adresse freizugeben. Ohne diverse Anleitungen von [TrezorHannes](https://github.com/TrezorHannes) wäre diese hier nicht entstanden. Daher danke für den massiven Input an dieser Stelle.
 
 ### Voraussetzungen
 - Ein Oracle Cloud Free Tier Account ([Link](https://www.oracle.com/cloud/free/)). Dieser erfordert Klarnamen-Einträge, die am Ende der Account-Erstellung mit der Eingabe von Kreditkarten-Daten und einer Ab- und Rückbuchung von 1$ bestätigt werden. Im Verlauf des Tutorials werden wir lediglich Produkte "buchen", die als "immer kostenlos" deklariert werden. Der Free Tier Account hat gewisse Einschränkungen in Sachen Anzahl aktiver Instanzen und Traffic, die hierfür aber mehr als ausreichend sein sollten.
