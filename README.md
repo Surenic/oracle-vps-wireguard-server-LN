@@ -174,7 +174,7 @@ sudo iptables -t nat -A PREROUTING -i ens3 -p tcp --dport 9735 -j DNAT --to-dest
 sudo iptables -t nat -A POSTROUTING -o wg0 -p tcp --dport 9735 -d 10.8.0.2 -j SNAT --to-source 10.8.0.1
 ```
 
-Mittels dieser Befehle werden Anfragen an den Port 9735 des Servers (10.8.0.1) an die IP und Port der Node (10.8.0.2) weitergeleitet. Wiederholt die 3 Befehle die `--dport 9735` enthalten mit sämtlichen Ports die ihr freigeben bzw. weiterleiten wollt. Z.B. für Zeus (6001)
+Mittels dieser Befehle werden Anfragen an den Port 9735 des Servers (10.8.0.1) an die IP und Port der Node (10.8.0.2) weitergeleitet. Wiederholt die 3 Befehle die `--dport 9735` enthalten mit sämtlichen Ports die ihr freigeben bzw. weiterleiten wollt. Z.B. für Zeus (6100)
 
 ```
 sudo iptables -A FORWARD -i ens3 -o wg0 -p tcp --syn --dport 6100 -m conntrack --ctstate NEW -j ACCEPT
@@ -228,7 +228,7 @@ PrivateKey = ***base64_encoded_peer_private_key_goes_here***
 Address = 10.8.0.2/24
 
 [Peer]
-PublicKey = U9uE2kb/nrrzsEU58GD3pKFU3TLYDMCbetIsnV8eeFE=
+PublicKey = ***base64_encoded_peer_public_key_goes_here***
 AllowedIPs = 0.0.0.0/0
 Endpoint = SERVER_IP:51820
 PersistentKeepalive = 25
@@ -283,7 +283,7 @@ Im Raspiblitzmenü unter System findet ihr die entsprechenden Konfigurationsdate
 LND
 
 ```
-externalip=PUBLIC_IP:9735
+externalip=VPSSERVER_IP:9735
 nat=false
 
 tor.active=true
@@ -298,7 +298,7 @@ CLN
 bind-addr=0.0.0.0:9736
 addr=statictor:127.0.0.1:9051/torport=9736
 always-use-proxy=false
-announce-addr=PUBLIC_IP:9736
+announce-addr=VPSSERVER_IP:9736
 ```
 
 In beiden Fällen solltet ihr checken, ob gewisse Einträge nicht bereits vorhanden sind und geändert werden müssen.
