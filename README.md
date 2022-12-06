@@ -28,7 +28,7 @@ Falls ihr über eine eigene Domain verfügt, lassen sich Dienste über einen ngi
 
 ## VPS Server Konfiguration
 
-1. Ist die Instanz hochgefahren, seht ihr unter Instanzzugriff euren Benutzernamen (ubuntu) sowie die Public IP. Notiert diese.
+1. Ist die Instanz hochgefahren, seht ihr unter Instanzzugriff euren Benutzernamen (ubuntu) sowie die öffentliche IP-Adresse eures Servers (im weiteren Verlauf `PUBLIC_IP`). Notiert diese.
 2. Unter Instanzdetails klickt ihr den Link zu eurem Virtuellen Cloud-Netzwerk, im folgenden Fenster auf euer Subnetz und dann wiederum auf eure "Default Security List". Hier müssen nun einige Portfreigaben eingerichtet werden
 3. Unter "Impress-Regeln hinzufügen" fügt ihr folgendes ein:
    - Quell-CIDR: `0.0.0.0/0`
@@ -46,7 +46,7 @@ Nehmt euren SSH-Client zur Hand und verbindet euch mit eurem Server mittels des 
 ssh ubuntu@PUBLIC_IP -i PATH_TO_PRIVATE_KEY/PRIVATE_KEY_FILE
 ```
 
-`PUBLIC_IP` ist dabei die zuvor notierte IP eures Servers, der Pfad und die File unter Linux ist standardmäßig `~/.ssh/id_rsa`
+Der Pfad und die File für die ssh-Schlüssel ist unter Linux standardmäßig `~/.ssh/id_rsa`
 
 Nun führt ihr einige Befehle aus, um die Instanz auf den neuesten Stand zu bringen und entsprechend vorzubereiten.
 
@@ -231,11 +231,11 @@ Address = 10.8.0.2/24
 [Peer]
 PublicKey = ***base64_encoded_peer_public_key_goes_here***
 AllowedIPs = 0.0.0.0/0
-Endpoint = SERVER_IP:51820
+Endpoint = PUBLIC_IP:51820
 PersistentKeepalive = 25
 ```
 
-Würden wir den Wireguard Client nun starten, würde dieser versuchen, sich mit dem VPS verbinden, würde aber die lokale Anbindung verlieren. Ein Zugriff wäre dann nur über den VPS möglich. Um das zu verhindern fügen wir noch folgende Zeilen in die wg0.conf unten an. `Die LOCAL_NODE_IP` ist dabei die IP eurer Node im Heimnetzwerk, `die LOCAL_ROUTER_IP` die lokale IP eures Routers und `DNS-ADRESSE-DES-VPS` die DNS IP des VPS, die ihr mittels des Befehls `resolvectl dns ens3` auf dem Server ermitteln könnt.
+Würden wir den Wireguard Client nun starten, würde dieser versuchen, sich mit dem VPS verbinden, würde aber die lokale Anbindung verlieren. Ein Zugriff wäre dann nur über den VPS möglich. Um das zu verhindern fügen wir noch folgende Zeilen in die wg0.conf unten an. Die `LOCAL_NODE_IP` ist dabei die IP eurer Node im Heimnetzwerk, die `LOCAL_ROUTER_IP` die lokale IP eures Routers und `DNS-ADRESSE-DES-VPS` die DNS IP des VPS, die ihr mittels des Befehls `resolvectl dns ens3` auf dem Server ermitteln könnt.
 
 ```
 PostUp = ip rule add table 200 from LOCAL_NODE_IP
@@ -284,7 +284,7 @@ Im Raspiblitzmenü unter System findet ihr die entsprechenden Konfigurationsdate
 LND
 
 ```
-externalip=VPSSERVER_IP:9735
+externalip=PUBLIC_IP:9735
 nat=false
 
 tor.active=true
@@ -299,7 +299,7 @@ CLN
 bind-addr=0.0.0.0:9736
 addr=statictor:127.0.0.1:9051/torport=9736
 always-use-proxy=false
-announce-addr=VPSSERVER_IP:9736
+announce-addr=PUBLIC_IP:9736
 ```
 
 In beiden Fällen solltet ihr checken, ob gewisse Einträge nicht bereits vorhanden sind und geändert werden müssen.
