@@ -9,7 +9,7 @@ Diese Anleitung soll als Hilfestellung dienen, eine bestehende Raspiblitz Full N
 - Macht euch Gedanken darüber, welche Services ihr über das Clearnet erreichen wollt und notiert euch die benötigten Ports (z.B. LND 9735, CLN 9736, LNbits 5001, Electrum Server 50002 uws.)
 
 ### Anmerkung
-Falls ihr über eine eigene Domain verfügt, lassen sich Dienste über einen nginx Reverse Proxy Server über Subdomains (bspw. lnbits.domain.org) verfügbar machen, ohne dass die entsprechenden Ports freigegeben werden müssen. Hierzu erfolgt ein separates Tutorial
+Falls ihr über eine eigene Domain verfügt, lassen sich Dienste über einen nginx Reverse Proxy Server über Subdomains (bspw. lnbits.domain.org) verfügbar machen, ohne dass die entsprechenden Ports freigegeben werden müssen. Ruft dazu gern im Anschluss [dieses Tutorial hier](https://github.com/Surenic/reverse-proxy-node-services) auf.
 
 ## VPS Server Setup
 
