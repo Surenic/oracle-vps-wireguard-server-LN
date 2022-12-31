@@ -235,7 +235,7 @@ Endpoint = PUBLIC_IP:51820
 PersistentKeepalive = 25
 ```
 
-Würden wir den Wireguard Client nun starten, würde dieser versuchen, sich mit dem VPS verbinden, würde aber die lokale Anbindung verlieren. Ein Zugriff wäre dann nur über den VPS möglich. Um das zu verhindern fügen wir noch folgende Zeilen in die wg0.conf unten an. Die `LOCAL_NODE_IP` ist dabei die IP eurer Node im Heimnetzwerk, die `LOCAL_ROUTER_IP` die lokale IP eures Routers und `DNS-ADRESSE-DES-VPS` die DNS IP des VPS, die ihr mittels des Befehls `resolvectl dns ens3` auf dem Server ermitteln könnt.
+Würden wir den Wireguard Client nun starten, würde dieser versuchen, sich mit dem VPS verbinden, würde aber die lokale Anbindung verlieren. Ein Zugriff wäre dann nur über den VPS möglich. Um das zu verhindern fügen wir noch folgende Zeilen in die wg0.conf unter dem [Interface]-, vor den [Peer]-Part ein. Die `LOCAL_NODE_IP` ist dabei die IP eurer Node im Heimnetzwerk, die `LOCAL_ROUTER_IP` die lokale IP eures Routers und `DNS-ADRESSE-DES-VPS` die DNS IP des VPS, die ihr mittels des Befehls `resolvectl dns ens3` auf dem Server ermitteln könnt.
 
 ```
 PostUp = ip rule add table 200 from LOCAL_NODE_IP
