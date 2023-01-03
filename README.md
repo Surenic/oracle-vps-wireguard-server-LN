@@ -309,9 +309,12 @@ Nun müsst ihr beim Speichern der Datei den entsprechenden Service neu starten.
 Das war's. Eure Nodes und Dienste sollten nun unter der entsprechenden IP erreichbar sein
 
 
-Wenn euch das Tutorial gefallen hat und alles funktioniert, wie es soll, freue ich mich, wenn ihr meinen LNurlp-Link mal ausprobiert ;)
 
-[<img src=https://raw.githubusercontent.com/Surenic/oracle-vps-wireguard-server-LN/main/QR.png width="200" height="200">](https://lnbits.surenic.net/lnurlp/2)
+### Tips:
+<p align="center">
+<img src=https://raw.githubusercontent.com/Surenic/oracle-vps-wireguard-server-LN/main/QR_ln.tips.jpeg width="300" height="300">
+LNURL1DP68GURN8GHJ7MRW9E6XJURN9UH8WETVDSKKKMN0WAHZ7MRWW4EXCUP0X9URZCFHVSMXXWRP8QMRYV34V4JKGW7QDYR
+</p>
 
 Folgt mir auf Twitter!
 
