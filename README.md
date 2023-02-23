@@ -28,7 +28,7 @@ Falls ihr über eine eigene Domain verfügt, lassen sich Dienste über einen ngi
 
 ## VPS Server Konfiguration
 
-1. Ist die Instanz hochgefahren, seht ihr unter Instanzzugriff euren Benutzernamen (ubuntu) sowie die öffentliche IP-Adresse eures Servers (im weiteren Verlauf `PUBLIC_IP`). Notiert diese.
+1. Ist die Instanz hochgefahren, seht ihr unter Instanzzugriff euren Benutzernamen (ubuntu) sowie die öffentliche IP-Adresse eures Servers (im weiteren Verlauf `VPS-PUBLIC-IP`). Notiert diese.
 2. Unter Instanzdetails klickt ihr den Link zu eurem Virtuellen Cloud-Netzwerk, im folgenden Fenster auf euer Subnetz und dann wiederum auf eure "Default Security List". Hier müssen nun einige Portfreigaben eingerichtet werden
 3. Unter "Impress-Regeln hinzufügen" fügt ihr folgendes ein:
    - Quell-CIDR: `0.0.0.0/0`
@@ -43,7 +43,7 @@ Falls ihr über eine eigene Domain verfügt, lassen sich Dienste über einen ngi
 Nehmt euren SSH-Client zur Hand und verbindet euch mit eurem Server mittels des zuvor erstellten private keys. Im Falle des Linux-Terminals sieht das so aus
 
 ```
-ssh ubuntu@PUBLIC_IP -i PATH_TO_PRIVATE_KEY/PRIVATE_KEY_FILE
+ssh ubuntu@VPS-PUBLIC-IP -i PATH_TO_PRIVATE_KEY/PRIVATE_KEY_FILE
 ```
 
 Der Pfad und die File für die ssh-Schlüssel ist unter Linux standardmäßig `~/.ssh/id_rsa`
@@ -157,14 +157,14 @@ und fügt folgende Zeilen ans Ende an:
 
 ```
 PostUp = ufw route allow in on wg0 out on ens3
-PostUp = iptables -t nat -I POSTROUTING -o ens3 -j MASQUERADE
+PostUp = iptables -t nat -I POSTROUTING -o ens3 -j SNAT --to-source VPS-PUBLIC-IP
 PreDown = ufw route delete allow in on wg0 out on ens3
-PreDown = iptables -t nat -D POSTROUTING -o ens3 -j MASQUERADE
+PreDown = iptables -t nat -D POSTROUTING -o ens3 -j SNAT --to-source VPS-PUBLIC-IP
 ```
 
 Achtet auf den Adapternamen und ändert ihn ggf. ab. Speichert die Datei mit STRG+X, Y/J und Enter.
 
-Nun müssen die Anfragen an SERVER_IP:PORT an den jeweiligen Port der Node weitergereicht werden. Hierzu müssen folgende iptables Befehle ausgeführt werden. Achtet erneut auf den Adapternamen:
+Nun müssen die Anfragen an VPS-PUBLIC-IP:PORT an den jeweiligen Port der Node weitergereicht werden. Hierzu müssen folgende iptables Befehle ausgeführt werden. Achtet erneut auf den Adapternamen:
 
 ```
 sudo iptables -P FORWARD DROP
@@ -175,7 +175,7 @@ sudo iptables -t nat -A PREROUTING -i ens3 -p tcp --dport 9735 -j DNAT --to-dest
 sudo iptables -t nat -A POSTROUTING -o wg0 -p tcp --dport 9735 -d 10.8.0.2 -j SNAT --to-source 10.8.0.1
 ```
 
-Mittels dieser Befehle werden Anfragen an den Port 9735 des Servers (10.8.0.1) an die IP und Port der Node (10.8.0.2) weitergeleitet. Wiederholt die 3 Befehle die `--dport 9735` enthalten mit sämtlichen Ports die ihr freigeben bzw. weiterleiten wollt. Z.B. für Zeus (6100)
+Mittels dieser Befehle werden Anfragen an den Port 9735 des VPS-Servers an die IP und Port der Node (10.8.0.2) weitergeleitet. Wiederholt die 3 Befehle die `--dport 9735` enthalten mit sämtlichen Ports die ihr freigeben bzw. weiterleiten wollt. Z.B. für Zeus (6100)
 
 ```
 sudo iptables -A FORWARD -i ens3 -o wg0 -p tcp --syn --dport 6100 -m conntrack --ctstate NEW -j ACCEPT
@@ -221,7 +221,7 @@ Wie zuvor erstellen wir auch auf der Node eine wg0.conf
 sudo nano /etc/wireguard/wg0.conf
 ```
 
-Tragt folgende Zeilen ein und ergänzt die nötigen Angaben wie Private Key der Node, Public Key des VPS und SERVER_IP (Endpoint) des VPS
+Tragt folgende Zeilen ein und ergänzt die nötigen Angaben wie Private Key der Node, Public Key des VPS und VPS-PUBLIC-IP (Endpoint) des VPS
 
 ```
 [Interface]
@@ -231,11 +231,11 @@ Address = 10.8.0.2/24
 [Peer]
 PublicKey = ***base64_encoded_peer_public_key_goes_here***
 AllowedIPs = 0.0.0.0/0
-Endpoint = PUBLIC_IP:51820
+Endpoint = VPS-PUBLIC-IP:51820
 PersistentKeepalive = 25
 ```
 
-Würden wir den Wireguard Client nun starten, würde dieser versuchen, sich mit dem VPS verbinden, würde aber die lokale Anbindung verlieren. Ein Zugriff wäre dann nur über den VPS möglich. Um das zu verhindern fügen wir noch folgende Zeilen in die wg0.conf unter dem [Interface]-, vor den [Peer]-Part ein. Die `LOCAL_NODE_IP` ist dabei die IP eurer Node im Heimnetzwerk, die `LOCAL_ROUTER_IP` die lokale IP eures Routers und `DNS-ADRESSE-DES-VPS` die DNS IP des VPS, die ihr mittels des Befehls `resolvectl dns ens3` auf dem Server ermitteln könnt.
+Würden wir den Wireguard Client nun starten, würde der Pi versuchen, direkt mit dem VPS zu kommunizieren, aber technisch muss er natürlich weiterhin den lokalen Router als "next hop" verwenden. Um das zu erreichen, fügen wir noch folgende Zeilen in die wg0.conf unter dem [Interface]-, vor den [Peer]-Part ein. Die `LOCAL_NODE_IP` ist dabei die IP eurer Node im Heimnetzwerk (nicht die Wireguard IP!), die `LOCAL_ROUTER_IP` die lokale IP eures Routers und `DNS-ADRESSE-DES-VPS` die DNS IP des VPS, die ihr mittels des Befehls `resolvectl dns ens3` auf dem Server ermitteln könnt. Sollte dieser Befehl keine DNS IP zurückliefern, könnt ihr es auch mit diesem Befehl versuchen: `dig www.google.de | awk -F'[# ]' '/^;; SERVER:/ { print $3 }'`.
 
 ```
 PostUp = ip rule add table 200 from LOCAL_NODE_IP
@@ -246,7 +246,7 @@ PreDown = ip route delete table 200 default via LOCAL_ROUTER_IP
 DNS = DNS-ADRESSE-DES-VPS
 ```
 
-Zu guter Letzt müssen wir dem VPS Server nun mitteilen bzw. erlauben, dass sich die Node mit diesem verbinden darf. Dazu muss der Public Key der Node am VPS Server registriert werden. Wir wechseln also erneut in das Terminal-Fenster des VPS
+Zu guter Letzt müssen wir dem VPS Server nun mitteilen bzw. erlauben, dass sich die Node mit diesem verbinden darf. Dazu muss der Wireguard Public Key der Node am VPS Server registriert werden. Wir wechseln also erneut in das Terminal-Fenster des VPS
 
 ```
 sudo wg set wg0 peer NODE_PUBLIC_KEY allowed-ips 10.8.0.2
@@ -261,7 +261,7 @@ Im Terminal-Fenster der Node verbinden wir den WG-Client mit dem Server
 ```
 sudo wg-quick up wg0
 ```
-stellt eine kurze Verbindung her. Checkt via `sudo wg` sowohl auf der Node als auch auf dem Server, ob eine Verbindung besteht, Stichwort Handshake.
+stellt eine kurze Verbindung her. Checkt via `sudo wg` sowohl auf der Node als auch auf dem Server, ob eine Verbindung besteht, Stichwort Handshake. Auf der Node könnt ihr mit `curl api.ipify.org` testen, ob ihr nach außen die PUBLIC-VPS-IP habt. Der Befehl gibt euch einfach eure IP zurück (Alternative: `curl wtfismyip.com/text`).
 
 ```
 sudo wg-quick down wg0
@@ -277,23 +277,27 @@ sudo systemctl status wg-quick@wg0.service
 
 ## Node Verbindung 
 
-Auch wenn Port 9735 oder 9736 der Clearnet VPS IP nun auf eure Node zeigt, müssen die entsprechenden Settings innerhalb der jeweiligen LN-Implentierung noch eingetragen werden, um die Node im Hybrid Modus zu fahren.
+Auch wenn Port 9735 (oder 9736 für CLN) der PUBLIC-VPS-IP nun auf eure Node zeigt, müssen die entsprechenden Settings innerhalb der jeweiligen LN-Implentierung noch eingetragen werden, um die Node im Hybrid Modus zu fahren.
 
-Im Raspiblitzmenü unter System findet ihr die entsprechenden Konfigurationsdateien, die ihr wie folgt bearbeiten müsst.
+Im Raspiblitzmenü unter System findet ihr die entsprechenden Konfigurationsdateien, die ihr wie folgt bearbeiten müsst. In beiden Fällen solltet ihr checken, ob gewisse Einträge nicht bereits vorhanden sind und geändert werden müssen.
 
-LND
+LND:
 
+Unter der Section [Application Options] folgendes hinzufügen:
 ```
-externalip=PUBLIC_IP:9735
+externalip=PUBLIC-VPS-IP:9735
 nat=false
+```
 
+Unter der Section [tor] folgendes hinzufügen:
+```
 tor.active=true
 tor.v3=true
 tor.streamisolation=false
 tor.skip-proxy-for-clearnet-targets=true
 ```
 
-CLN
+CLN:
 
 ```
 bind-addr=0.0.0.0:9736
@@ -302,12 +306,51 @@ always-use-proxy=false
 announce-addr=PUBLIC_IP:9736
 ```
 
-In beiden Fällen solltet ihr checken, ob gewisse Einträge nicht bereits vorhanden sind und geändert werden müssen.
+Um die Konfigurationsdatei zu speichern, navigiert ihr mit TAB zum Button OK und bestätigt mit ENTER.
 
-Nun müsst ihr beim Speichern der Datei den entsprechenden Service neu starten.
+Stand jetzt (RaspiBlitz v1.8.0), müsst ihr noch eine Kleinigkeit im LND-checkup File anpassen, sonst wird die externalip nach einem Neustart der Node aus der LND Konfigurationsdatei gelöscht. Wir öffnen also die LND-checkup File:
+```
+sudo nano /home/admin/config.scripts/lnd.check.sh
+```
 
-Das war's. Eure Nodes und Dienste sollten nun unter der entsprechenden IP erreichbar sein
+und kommentieren die Zeilen 185-190 aus:
+```
+#  if [ "${runBehindTor}" != "on" ]; then
+#    setting ${lndConfFile} ${insertLine} "externalip" "${publicIP}:${lndPort}"
+#  else
+    # when running Tor a public ip can make startup problems - so remove
+#    sed -i '/^externalip=*/d' ${lndConfFile}
+#  fi
+```
 
+Nun konfigurieren wir den LND-Service so, dass er erst startet, wenn der Wireguard-Service gestartet wurde. Wenn LND vor dem Wireguard-Service startet, wird ggf. mit eurer privaten Public IP nach außen kommuniziert, was aus Privacy-Gründen in der Regel unerwünscht ist.
+Wir öffnen also die LND service unit Datei:
+```
+sudo systemctl edit --full lnd.service
+```
+
+In der [Unit] section muss nun "wg-quick@wg0.service" an die beiden Zeilen anhängt werden, Ergebnis:
+```
+Requires=bitcoind.service wg-quick@wg0.service
+After=bitcoind.service wg-quick@wg0.service
+```
+
+Zum Schluss müsst ihr nur noch LND neustarten und die Lightning-Wallet unlocken:
+```
+sudo systemctl restart lnd.service
+lncli unlock
+```
+
+Sollte es beim Start von LND Probleme geben, könnt ihr den Log verfolgen:
+```
+sudo tail -n 30 -f /mnt/hdd/lnd/logs/bitcoin/mainnet/lnd.log
+```
+
+Das war's. Eure Nodes und Dienste sollten nun unter der entsprechenden IP erreichbar sein. Eine Prüfung für LND macht ihr so:
+```
+lncli getinfo
+```
+lncli sollte euch für eure LND-Node in der Section "uris" nun sowohl eure tor-Adresse als auch die VPS-PUBLIC-IP anzeigen.
 
 
 ### Tips:
